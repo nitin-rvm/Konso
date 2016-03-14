@@ -14,8 +14,8 @@ WorkCenter = React.createClass({
       if (!last_item.workorderNo) {
         console.warn(['workorderNo not found or zero for the following record. Might cause problem in calculating:- accumulativeCount, avg_output, currentEfficiency.', last_item])
       }
-      if (!last_item.StandardWorkTime) {
-        console.warn(['StandardWorkTime not found or zero for the following record. Might cause problem in calculating:- currentEfficiency, todayEfficiency.', last_item])
+      if (!last_item.standardWorkTime) {
+        console.warn(['standardWorkTime not found or zero for the following record. Might cause problem in calculating:- currentEfficiency, todayEfficiency.', last_item])
       }
 
       // Difference gives the milliseconds.
@@ -23,7 +23,7 @@ WorkCenter = React.createClass({
 
       // sum(dataRecord.Count), condition is dataRecord.workcenterCode = last.workcenterCode and dataRecord.workorderNo = last.workorderNo and dataRecord.recordTime between last.startTime and currentTime and dataRecord.functionCode = "C001" Accumulative Quantity: 累計生產數:
       var accumulativeCount = 0;
-      var accumulativeCountRecords = DataRecord.find({workcenterCode:this.props.workcenterCode,workorderNo:last_item.workorderNo,functionCode:"C001",recordTime:{$lte: _Now(), $gte:last_item.startTime}}).fetch()
+      var accumulativeCountRecords = DataRecord.find({workcenterCode:this.props.workcenterCode,workorderNo:last_item.workorderNo,functionCode:"C001",machineFunction:"COUNT",recordTime:{$lte: _Now(), $gte:last_item.startTime}}).fetch()
       accumulativeCountRecords.map(function(record){
         if (record.count) {
           accumulativeCount += record.count;
@@ -31,7 +31,7 @@ WorkCenter = React.createClass({
       });
 
       // stand output 3600 / last.standardWorkTime Standard output(H): 標準輸出(小時):
-      var standard_work_time = 3600 / last_item.StandardWorkTime;
+      var standard_work_time = 3600 / last_item.standardWorkTime;
       if (standard_work_time) { standard_work_time = standard_work_time.toFixed(2) }
 
       // (3600 / (currentTime - last.startTime)) * accumulativeCount Average output(H): 平均輸出(小時):
@@ -42,8 +42,8 @@ WorkCenter = React.createClass({
 
       // currentEfficiency ((currentTime - last.startTime) / last.standardWorkTime) / accumulativeCount, convert to percent. Current Efficiency: 當前效率:
       var currentEfficiency = 0;
-      if (accumulativeCount && seconds_between_last_start_time_and_now && last_item.StandardWorkTime){
-        currentEfficiency = ((seconds_between_last_start_time_and_now / last_item.StandardWorkTime) / accumulativeCount)/1000;
+      if (accumulativeCount && seconds_between_last_start_time_and_now && last_item.standardWorkTime){
+        currentEfficiency = ((seconds_between_last_start_time_and_now / last_item.standardWorkTime) / accumulativeCount)/1000;
       }
       if (currentEfficiency) { currentEfficiency = (currentEfficiency * 100).toFixed(2) }
 
@@ -53,16 +53,16 @@ WorkCenter = React.createClass({
       // 2. Summarize the ""Standard Efficiency"" / Summarize the ""Fact Efficiency"" of 1, convert to percent." Today Efficiency: 當天效率:
       var todayEfficiency = 0;
       var production_quantity = 0;
-      if (last_item.StandardWorkTime) {
+      if (last_item.standardWorkTime) {
         var records_for_pq = DataRecord.find({workcenterCode:this.props.workcenterCode,recordTime:{ $gte: _DayStart() , $lte: _DayEnd() }, functionCode:"C001"}).fetch()
         records_for_pq.map(function(record){
           if (record.count) {
             production_quantity += record.count;
           }
         });
-        var standard_efficiency = production_quantity/last_item.StandardWorkTime
+        var standard_efficiency = production_quantity/last_item.standardWorkTime
         var fact_efficiency = production_quantity * seconds_between_last_start_time_and_now
-        todayEfficiency = standard_efficiency / fact_efficiency
+        todayEfficiency = standard_efficiency / fact_efficiency;
         if (todayEfficiency) { todayEfficiency = (todayEfficiency * 100).toFixed(2) }
       }
 
@@ -71,11 +71,13 @@ WorkCenter = React.createClass({
       var currentQualityRate = 0;
       if (accumulativeCount) {
         // machineFunction = "QUALITY" with maximal recordTime, call it LAST2
-        var last2_item = DataRecord.findOne({workcenterCode:this.props.workcenterCode, machineFunction:"QUALITY" }, {sort: {recordTime: -1}});
+        var last2_items = DataRecord.find({workcenterCode:this.props.workcenterCode, machineFunction:"QUALITY" }, {sort: {recordTime: -1}}).fetch();
         // NGCount  sum(last2.Count)
-        if (last2_item && last2_item.count) {
-          var NGCount = last2_item.count
-        }
+        last2_items.map(function(record){
+        if (record.count){
+          NGCount += record.count;
+          }
+        })
         // currentQualityRate accumulativeCount / (accumulativeCount + NGCount) , convert to percent
         currentQualityRate =  accumulativeCount/(accumulativeCount+NGCount);
         if (currentQualityRate){ currentQualityRate = (currentQualityRate * 100).toFixed(2);}
@@ -145,7 +147,7 @@ WorkCenter = React.createClass({
 
   render : function(){
     var get_state = function(){
-      if (this.data.last_item && this.data.avg_output && this.data.last_item.StandardWorkTime && (this.data.avg_output < this.data.last_item.StandardWorkTime)) {
+      if (this.data.last_item && this.data.avg_output && this.data.last_item.standardWorkTime && (this.data.avg_output < this.data.last_item.standardWorkTime)) {
         var status = 'OTHER';
       } else if (this.data.last_item){
         var status = this.data.last_item.currentStatus;

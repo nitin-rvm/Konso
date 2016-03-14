@@ -9,7 +9,7 @@ HourlyInfo = React.createClass({
     dataRecords.forEach(function(record){
       var time = record.recordTime;
       var hour = time.getHours().toString();
-      if (record.count){
+      if (record.count && record.machineFunction == "COUNT"){
         if (info[hour]) {
           info[hour] += record.count;
         }

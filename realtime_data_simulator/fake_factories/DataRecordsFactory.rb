@@ -30,7 +30,7 @@ class DataRecordFactory
       :startTime => sample_past_time,
       :endTime => sample_past_time,
       :personCount => rand(100),
-      :StandardWorkTime => rand(0.9),
+      :standardWorkTime => rand(10),
       :recordTime => Time.now,
       :functionCode => ["S#{rand(999)}", "C001"].sample,
       :functionName => FFaker::UnitMetric.volume_name,
