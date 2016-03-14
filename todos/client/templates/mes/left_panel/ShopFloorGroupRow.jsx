@@ -25,9 +25,9 @@ ShopFloorGroupRow = React.createClass ({
     var offline = [];
     var paused  = [];
     var working = [];
-    var online = [];    
+    var online = [];
     work_centers_codes.map(function(work_center_code){
-      var last_item = DataRecord.findOne({workcenterCode:work_center_code,$or:[{functionCode:"C001"},{functionCode:/S.*/}]},{sort: {recordTime:-1}});
+      var last_item = DataRecord.findOne({workcenterCode:work_center_code, machineFunction:"COUNT" }, {sort: {recordTime: -1}});
       if (last_item) {
         switch(last_item.currentStatus) {
           case "FAULT":
@@ -50,7 +50,7 @@ ShopFloorGroupRow = React.createClass ({
           break;
         case "ONLINE":
           online.push(last_item)
-          break;          
+          break;
         }
       }
       else{
@@ -119,7 +119,7 @@ ShopFloorGroupRow = React.createClass ({
               {this.data.offline.length > 0 ? <SummeryInfo color='RED' detail_array={this.data.offline} info_type="離線: "/> : ''}
               {this.data.paused.length > 0 ? <SummeryInfo color='BLUE' detail_array={this.data.paused} info_type="暫停: "/> : ''}
               {this.data.working.length > 0 ? <SummeryInfo color='GREEN' blink="true" detail_array={this.data.working} info_type="工作中: "/> : ''}
-              {this.data.online.length > 0 ? <SummeryInfo color='GREEN' detail_array={this.data.online} info_type="在線: "/> : ''}              
+              {this.data.online.length > 0 ? <SummeryInfo color='GREEN' detail_array={this.data.online} info_type="在線: "/> : ''}
             </a>
           </li>
           <div>

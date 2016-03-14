@@ -23,7 +23,7 @@ WorkCenterInfo = React.createClass({
     var pos = this.getInfoDivPos();
     var checkValue = function(value){
       if (value){
-       return value 
+       return value
       }
       else{
         return " "
@@ -46,7 +46,7 @@ WorkCenterInfo = React.createClass({
         case "ONLINE":
           return "在線"
         }
-      return value;        
+      return value;
     };
     return(
       <div className="WorkCenterInfoBox" style = {{"left": pos[0] + 'px',"top": pos[1] + 'px', "width": "260"}}>
@@ -67,7 +67,7 @@ WorkCenterInfo = React.createClass({
               <tr className="bg_grey"> <td className="wci_align_right">不良數</td> <td> {checkValue(this.props.info_stats.NGCount)} </td> </tr>
               <tr> <td className="wci_align_right">累計生產數</td> <td> {checkValue(this.props.info_stats.accumulativeCount)} </td> </tr>
               <tr className="bg_grey"> <td className="wci_align_right">平均輸出(小時)</td> <td> {checkValue(this.props.info_stats.avg_output)} </td> </tr>
-              <tr> <td className="wci_align_right">標準輸出(小時):</td> <td> {checkValue((3600/this.props.info_stats.last_item.StandardWorkTime).toFixed(2))} </td> </tr>
+              <tr> <td className="wci_align_right">標準輸出(小時):</td> <td> {checkValue(this.props.info_stats.standard_work_time)} </td> </tr>
               <tr className="bg_grey"> <td className="wci_align_right">當前效率</td> <td> {checkValue(this.props.info_stats.currentEfficiency)} </td> </tr>
               <tr> <td className="wci_align_right">當天效率</td> <td> {checkValue(this.props.info_stats.todayEfficiency)} </td> </tr>
               <tr className="bg_grey"> <td className="wci_align_right">當前品質達標率</td> <td> {checkValue(this.props.info_stats.currentQualityRate)} </td> </tr>

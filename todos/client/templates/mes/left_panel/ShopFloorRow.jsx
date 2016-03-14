@@ -21,7 +21,7 @@ ShopFloorRow = React.createClass({
     var working = [];
     var online = [];
     work_centers_codes.map(function(work_center_code){
-      var last_item = DataRecord.findOne({workcenterCode:work_center_code,$or:[{functionCode:"C001"},{functionCode:/S.*/}]},{sort: {recordTime:-1}});
+      var last_item = DataRecord.findOne({workcenterCode:work_center_code, machineFunction:"COUNT" }, {sort: {recordTime: -1}});
       if (last_item) {
         switch(last_item.currentStatus) {
         case "FAULT":
@@ -44,7 +44,7 @@ ShopFloorRow = React.createClass({
           break;
         case "ONLINE":
           online.push(last_item)
-          break;  
+          break;
         }
       }
       else{

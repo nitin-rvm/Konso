@@ -3,68 +3,109 @@ WorkCenter = React.createClass({
   mixins: [ReactMeteorData],
 
   getMeteorData : function(){
-    var pending_items = []
     var accumulative_items = []
     var data_records = DataRecord.find({workcenterCode:this.props.workcenterCode}).fetch();
-    var last_item = DataRecord.findOne({workcenterCode:this.props.workcenterCode, $or:[{machineFunction:"COUNT"}]}, {sort: {recordTime: -1}});
+    // machineFunction = "COUNT" with maximal recordTime , call it LAST
+    var last_item = DataRecord.findOne({workcenterCode:this.props.workcenterCode, machineFunction:"COUNT" }, {sort: {recordTime: -1}});
     if (last_item) {
+      if (!last_item.startTime) {
+        console.warn(['startTime not found or zero for the following record. Might cause problem in calculating:- avg_output, currentEfficiency, todayEfficiency', last_item])
+      }
+      if (!last_item.workorderNo) {
+        console.warn(['workorderNo not found or zero for the following record. Might cause problem in calculating:- accumulativeCount, avg_output, currentEfficiency.', last_item])
+      }
+      if (!last_item.StandardWorkTime) {
+        console.warn(['StandardWorkTime not found or zero for the following record. Might cause problem in calculating:- currentEfficiency, todayEfficiency.', last_item])
+      }
 
-      pending_items = DataRecord.find({workcenterCode:this.props.workcenterCode,recordTime:{ $lte: _Now(), $gte: last_item.startTime},functionCode:"QUALITY"}).fetch();
+      // Difference gives the milliseconds.
+      var seconds_between_last_start_time_and_now = (_Now() - last_item.startTime)/1000
 
+      // sum(dataRecord.Count), condition is dataRecord.workcenterCode = last.workcenterCode and dataRecord.workorderNo = last.workorderNo and dataRecord.recordTime between last.startTime and currentTime and dataRecord.functionCode = "C001" Accumulative Quantity: 累計生產數:
       var accumulativeCount = 0;
-      var accumulativeCountRecords = DataRecord.find({workcenterCode:this.props.workcenterCode,workorderNo:last_item.workorderNo,functionCode:"C001",recordTime:{$lte: _Now(),$gte:last_item.startTime}}).fetch()
+      var accumulativeCountRecords = DataRecord.find({workcenterCode:this.props.workcenterCode,workorderNo:last_item.workorderNo,functionCode:"C001",recordTime:{$lte: _Now(), $gte:last_item.startTime}}).fetch()
       accumulativeCountRecords.map(function(record){
-        accumulativeCount += record.count;
+        if (record.count) {
+          accumulativeCount += record.count;
+        }
       });
 
+      // stand output 3600 / last.standardWorkTime Standard output(H): 標準輸出(小時):
+      var standard_work_time = 3600 / last_item.StandardWorkTime;
+      if (standard_work_time) { standard_work_time = standard_work_time.toFixed(2) }
+
+      // (3600 / (currentTime - last.startTime)) * accumulativeCount Average output(H): 平均輸出(小時):
       var avg_output = 0;
-      if (accumulativeCount)
-      avg_output = (3600/(_Now() - last_item.startTime)) * accumulativeCount
+      if (accumulativeCount && seconds_between_last_start_time_and_now)
+        avg_output = (3600/seconds_between_last_start_time_and_now) * accumulativeCount
       if (avg_output){ avg_output = avg_output.toFixed(2)}
 
+      // currentEfficiency ((currentTime - last.startTime) / last.standardWorkTime) / accumulativeCount, convert to percent. Current Efficiency: 當前效率:
       var currentEfficiency = 0;
-      if (accumulativeCount)
-      currentEfficiency = (((_Now() - (new Date(last_item.startTime)))/ (last_item.StandardWorkTime)) / accumulativeCount)/1000;
+      if (accumulativeCount && seconds_between_last_start_time_and_now && last_item.StandardWorkTime){
+        currentEfficiency = ((seconds_between_last_start_time_and_now / last_item.StandardWorkTime) / accumulativeCount)/1000;
+      }
       if (currentEfficiency) { currentEfficiency = (currentEfficiency * 100).toFixed(2) }
 
+      // todayEfficiency "1. Get the record of which workcenterNo is current workcenter, recordTime belong to today (from 0:00 ~ 23:59:59)
+      //, functionCode is ""C001"", Grouped by startTime, summarize the Count as ""production quantity"",
+      // ""Production quantity"" / standWorkTime as ""Standard Efficiency"", ""Production Quantity"" * (currentTime - startTime ) as as ""Fact Efficiency"" .
+      // 2. Summarize the ""Standard Efficiency"" / Summarize the ""Fact Efficiency"" of 1, convert to percent." Today Efficiency: 當天效率:
       var todayEfficiency = 0;
-      var production_quantity = DataRecord.find({workcenterCode:this.props.workcenterCode,recordTime:{ $gte: _DayStart() , $lte: _DayEnd() }, functionCode:"C001"}).fetch().length
-      var standard_efficiency = production_quantity/last_item.StandardWorkTime
-      var fact_efficiency = production_quantity *(_Now() - last_item.startTime)
-      todayEfficiency = standard_efficiency / fact_efficiency
-      if (todayEfficiency) { todayEfficiency = (todayEfficiency * 100).toFixed(2) }
-    };
+      var production_quantity = 0;
+      if (last_item.StandardWorkTime) {
+        var records_for_pq = DataRecord.find({workcenterCode:this.props.workcenterCode,recordTime:{ $gte: _DayStart() , $lte: _DayEnd() }, functionCode:"C001"}).fetch()
+        records_for_pq.map(function(record){
+          if (record.count) {
+            production_quantity += record.count;
+          }
+        });
+        var standard_efficiency = production_quantity/last_item.StandardWorkTime
+        var fact_efficiency = production_quantity * seconds_between_last_start_time_and_now
+        todayEfficiency = standard_efficiency / fact_efficiency
+        if (todayEfficiency) { todayEfficiency = (todayEfficiency * 100).toFixed(2) }
+      }
 
-    var data_record_count = 0;
-    var data_record_count_function_code = 0;
-
-    var todays_dr = DataRecord.find({workcenterCode:this.props.workcenterCode,recordTime:{ $gte:_DayStart(), $lte:_DayEnd() }}).fetch();
-    todays_dr.map(function(element){
-      data_record_count += element.personCount
-      data_record_count_function_code += element.personCount;
-    });
-
-    // NGCount  sum(last2.Count)
-    var NGCount = 0;
-    pending_items.map(function(element){
-      NGCount += element.count ;
-    });
-
-
-    if (accumulativeCount) {
-      // currentQualityRate accumulativeCount / (accumulativeCount + NGCount) , convert to percent
+      // currentQualityRate accumulativeCount / (accumulativeCount + NGCount) , convert to percent Current Quality Reaching Rate: 當前品質達標率:
+      var NGCount = 0
       var currentQualityRate = 0;
-      currentQualityRate =  accumulativeCount/(accumulativeCount+NGCount);
-      if (currentQualityRate){ currentQualityRate = currentQualityRate.toFixed(2);}
+      if (accumulativeCount) {
+        // machineFunction = "QUALITY" with maximal recordTime, call it LAST2
+        var last2_item = DataRecord.findOne({workcenterCode:this.props.workcenterCode, machineFunction:"QUALITY" }, {sort: {recordTime: -1}});
+        // NGCount  sum(last2.Count)
+        if (last2_item && last2_item.count) {
+          var NGCount = last2_item.count
+        }
+        // currentQualityRate accumulativeCount / (accumulativeCount + NGCount) , convert to percent
+        currentQualityRate =  accumulativeCount/(accumulativeCount+NGCount);
+        if (currentQualityRate){ currentQualityRate = (currentQualityRate * 100).toFixed(2);}
+      };
+
     };
 
-    //todayQualityRate  "1.To summerize the count of dataRecord of today  and workcenterNo is current workcenter.
-    //2. To summerize the count of dataRecord of today , current workcenter, functionCode is ""C001"".
-    //3.  2 / 1, Convert to percent."
+    // todayQualityRate "1.To summerize the count of dataRecord of today and workcenterNo is current workcenter.
+    // 2. To summerize the count of dataRecord of today , current workcenter, functionCode is ""C001"". 3. 2 / 1, Convert to percent.
+    // " Today Quality Reaching Rate: 當天品質達標率:
+    var data_record_count = 0;
+    var todays_data_records = DataRecord.find({workcenterCode:this.props.workcenterCode,recordTime:{ $gte:_DayStart(), $lte:_DayEnd() }}).fetch();
+    todays_data_records.map(function(element){
+      if (element.count) {
+        data_record_count += element.count
+      }
+    });
+    var data_record_count_function_code = 0;
+    var todays_data_records_with_function_code = DataRecord.find({workcenterCode:this.props.workcenterCode, functionCode:"C001", recordTime:{ $gte:_DayStart(), $lte:_DayEnd() }}).fetch();
+    todays_data_records_with_function_code.map(function(element){
+      if (element.count) {
+        data_record_count_function_code += element.count
+      }
+    });
     var todayQualityRate = 0;
+    if (data_record_count_function_code && data_record_count) {
+      todayQualityRate = data_record_count_function_code / data_record_count;
+    }
+    if (todayQualityRate){todayQualityRate = (todayQualityRate * 100).toFixed(2)}
 
-    todayQualityRate = data_record_count_function_code / data_record_count;
-    if (todayQualityRate){todayQualityRate = todayQualityRate.toFixed(2)}
     return{
       last_item : last_item,
       NGCount : NGCount,
@@ -73,7 +114,8 @@ WorkCenter = React.createClass({
       todayQualityRate : todayQualityRate,
       avg_output : avg_output,
       currentQualityRate : currentQualityRate,
-      todayEfficiency : todayEfficiency
+      todayEfficiency : todayEfficiency,
+      standard_work_time: standard_work_time
     }
   },
 
