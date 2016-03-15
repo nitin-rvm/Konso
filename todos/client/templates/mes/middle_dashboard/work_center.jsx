@@ -43,7 +43,7 @@ WorkCenter = React.createClass({
       // accumulativeCount / ((currentTime - last.startTime)  / last.standardWorkTime) , convert to percent.
       var currentEfficiency = 0;
       if (accumulativeCount && seconds_between_last_start_time_and_now && last_item.standardWorkTime){
-        currentEfficiency = (accumulativeCount/((seconds_between_last_start_time_and_now)/ last_item.standardWorkTime))*1000;
+        currentEfficiency = (accumulativeCount/((seconds_between_last_start_time_and_now)/ last_item.standardWorkTime));
       }
       if (currentEfficiency) { currentEfficiency = (currentEfficiency * 100).toFixed(2) }
 
@@ -61,7 +61,9 @@ WorkCenter = React.createClass({
         $.each(groups_for_today_efficiency,function(startTime,elements){
           var act_count =  _.reduce(elements, function(count, element){ return count + element.count; }, 0);
           var stand_work_time = _.reduce(elements, function(count, element){ return count + element.standardWorkTime; }, 0);
+          if (act_count && stand_work_time)
           standard_efficiency_time += (act_count*stand_work_time);
+          if (elements[0].startTime)
           actual_efficiency_time +=  ((elements[0].endTime || _Now()) - elements[0].startTime)/1000;
         });
         todayEfficiency = standard_efficiency_time / actual_efficiency_time;
