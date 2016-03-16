@@ -44,7 +44,7 @@ WorkCenter = React.createClass({
       var currentEfficiency = 0;
       if (accumulativeCount && seconds_between_last_start_time_and_now && last_item.standardWorkTime){
         currentEfficiency = (accumulativeCount/((seconds_between_last_start_time_and_now)/ last_item.standardWorkTime));
-      }
+       }
       if (currentEfficiency) { currentEfficiency = (currentEfficiency * 100).toFixed(2) }
 
       // todayEfficiency "1. Get the record of which workcenterNo is current workcenter, recordTime belong to today (from 0:00 ~ 23:59:59)
@@ -66,13 +66,13 @@ WorkCenter = React.createClass({
           var stand_work_time = 0 // _.reduce(elements, function(count, element){ return count + element.standardWorkTime; }, 0);
           elements.map(function(element){
             act_count += element.count;
-            stand_work_time += element.standardWorkTime;
+            stand_work_time = element.standardWorkTime;
           });
           if (act_count && stand_work_time)
           standard_efficiency_time += (act_count*stand_work_time);
           if (elements[0].startTime)
           actual_efficiency_time +=  ((elements[0].endTime || _Now()) - elements[0].startTime)/1000;
-        });
+        }); 
         todayEfficiency = standard_efficiency_time / actual_efficiency_time;
         if (todayEfficiency) { todayEfficiency = (todayEfficiency * 100).toFixed(2) }
       }
