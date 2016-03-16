@@ -9,7 +9,7 @@ class DataRecordFactory
     shop_floors = ShopFloorGroup.all.map {|group| group.shopfloor}.flatten
     work_centers = shop_floors.map { |shopfloor| shopfloor['workcenter'] }.flatten
     no_of_data_records.times do
-      sleep rand(0.5)
+      # sleep rand(0.5)
       create_record work_centers.sample
     end if work_centers.present?
   end
@@ -37,6 +37,7 @@ class DataRecordFactory
       :remark => FFaker::SSNMX.imss,
       :count => 1,
       :machineFunction => Config::machineFunction.sample,
+      :accumulativeCount => rand(10)
     )
   end
 

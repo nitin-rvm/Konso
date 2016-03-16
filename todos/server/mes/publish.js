@@ -16,3 +16,11 @@ Meteor.publish('fetchDataRecords', function() {
   var data_record_cursores = DataRecord.find({workcenterCode: {$in:work_centers_codes}})
   return data_record_cursores
 });
+
+// Meteor.publish('aggregateDataRecords',function(workcenterCode){
+//   var aggregated_data_records = [];
+//   DataRecord.aggregate([{$match: { workcenterCode:workcenterCode,recordTime:{ $gte: _DayStart() , $lte: _DayEnd() }, machineFunction:"COUNT"}},{ $group: {startTime: "$startTime", accumulativeCount: {$sum : "$accumulativeCount"}, standardWorkTime : {$sum : "$standardWorkTime"}}}]).forEach(function(element){
+//       console.log(element);
+// });
+  
+// });

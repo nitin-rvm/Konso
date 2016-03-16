@@ -51,6 +51,9 @@ WorkCenter = React.createClass({
       //, functionCode is ""C001"", Grouped by startTime, summarize the Count as ""production quantity"",
       // ""Production quantity"" / standWorkTime as ""Standard Efficiency"", ""Production Quantity"" * (currentTime - startTime ) as as ""Fact Efficiency"" .
       // 2. Summarize the ""Standard Efficiency"" / Summarize the ""Fact Efficiency"" of 1, convert to percent." Today Efficiency: 當天效率:
+      
+      // Meteor.subscribe('aggregateDataRecords', this.props.workcenterCode);
+      // console.log(DataRecord.find().fetch())
       var todayEfficiency = 0;
       var production_quantity = 0;
       if (last_item.standardWorkTime) {
@@ -59,8 +62,12 @@ WorkCenter = React.createClass({
         var actual_efficiency_time = 0;
         var standard_efficiency_time = 0;
         $.each(groups_for_today_efficiency,function(startTime,elements){
-          var act_count =  _.reduce(elements, function(count, element){ return count + element.count; }, 0);
-          var stand_work_time = _.reduce(elements, function(count, element){ return count + element.standardWorkTime; }, 0);
+          var act_count = 0 // _.reduce(elements, function(count, element){ return count + element.count; }, 0);
+          var stand_work_time = 0 // _.reduce(elements, function(count, element){ return count + element.standardWorkTime; }, 0);
+          elements.map(function(element){
+            act_count += element.count;
+            stand_work_time += element.standardWorkTime;
+          });
           if (act_count && stand_work_time)
           standard_efficiency_time += (act_count*stand_work_time);
           if (elements[0].startTime)
@@ -121,7 +128,7 @@ WorkCenter = React.createClass({
       avg_output : avg_output,
       currentQualityRate : currentQualityRate,
       todayEfficiency : todayEfficiency,
-      standard_work_time: standard_work_time
+      standard_work_time: standard_work_time,
     }
   },
 
