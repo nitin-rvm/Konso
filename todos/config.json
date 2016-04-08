@@ -1,8 +1,8 @@
 {
   "public": {
-    "defaultLanguage": "zn",
-    "defaultAuth": "ldap",
-    "uploadsDir": "/home/art4ride/konsouploads",
+    "defaultLanguage": "zh",
+    "defaultAuth": "crowd",
+    "uploadsDir": "D:/meteor/Konso/todos/konsouploads",
     "privileges": {
       "createChannels": ["crowd-administrators"],
       "addCheckins": ["fic-hk-hrd"],
@@ -13,17 +13,17 @@
     }
   },
   "mailer": {
-    "email": "postmaster@sandboxc5399f0ba5e5466485831311fde4da6b.mailgun.org",
-    "password": "hidden",
-    "server":   "smtp.mailgun.org",
-    "port": 587,
+    "email": "noreply",
+    "password": "******",
+    "server":   "webmail.fujikon.com",
+    "port": 465,
     "name": "Konso Robot"
   },
   "authentication": {
     "crowd": {
-      "baseUrl": "http://192.168.1.134:8095/crowd/",
-      "appName": "im",
-      "appPassword": "123qwe"
+      "baseUrl": "http://id.fujikon.com/crowd/",
+      "appName": "konso",
+      "appPassword": "******"
     },
     "ldap": {
       "baseUrl": "ldap://ldap.forumsys.com",
