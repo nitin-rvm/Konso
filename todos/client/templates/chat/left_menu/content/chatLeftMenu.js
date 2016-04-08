@@ -64,6 +64,12 @@ Template.chatLeftMenu.helpers({
                 type: DialogTypes.ROOM
             }, {sort: {updated: -1}, skip: 4});
     },
+    cars: function () {
+        return Dialogs.find(
+            {
+                type: DialogTypes.CAR_BOOKING
+            }, {sort: {updated: -1}, limit: 10});
+    },
     canCreateChannels: function () {
         return PrivilegesUtils.canCreateChannels();
     }
@@ -104,6 +110,16 @@ Template.chatLeftMenu.events({
             heading: "New Room",
             maxWidth: 400,
             template: 'createDialog'
+        })
+    },
+    "click .chat-left-menu .create-car": function (e) {
+        GlobalUI.showCarDialog({
+            data: {
+                type: DialogTypes.CAR_BOOKING
+            },
+            heading: "New Car",
+            maxWidth: 400,
+            template: 'createCarDialog'
         })
     },
     "input .filter-dialogs": function (e) {

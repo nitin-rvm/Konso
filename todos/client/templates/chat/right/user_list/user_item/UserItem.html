@@ -18,6 +18,9 @@
 
                 <hr>
                 {{#if canAddCheckin}}
+                    <!--
+                       在這裡增加判定是否已經被添加，如果已被添加，則顯示修改按鈕
+                    -->
                 <a href="{{pathFor route="checkins" userId=_id}}" class=" usr-menu-btn waves-effect waves-light
                 btn"><i
                         class="material-icons

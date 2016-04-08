@@ -116,6 +116,9 @@ Template.chat.onDestroyed(function () {
 });
 
 Template.chat.helpers({
+	username: function () {
+		return Utils.getUsername(Meteor.user());
+	},
 	currentDialog: function () {
 		return IM.getCurrentDialog();
 	},

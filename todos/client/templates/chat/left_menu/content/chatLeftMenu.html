@@ -89,6 +89,21 @@
                     <span class="notexists">{{_ "chat.leftMenu.noChannels"}}</span>
 		{{/if}}
         </div>
+
+        <h6>Car Booking
+            <button class="btn-floating btn-flat right create-car"><i class="mdi-content-add"></i></button>
+        </h6>
+
+        <div>
+            {{#if cars.count}}
+                {{#each cars}}
+                    {{>dialogItem}}
+                {{/each}}
+            {{else}}
+                <span class="notexists">No Car List</span>
+            {{/if}}
+        </div>
+
     </div>
 
 </template>
